@@ -44,8 +44,11 @@ def iniciar_interface(df, cache):
 
         # Botão Exportar PDF
         if st.button("📄 Exportar PDF"):
-            exportar_pdf(df)
-            st.success("PDF exportado com sucesso!")
+            sucesso, mensagem = exportar_pdf(df)
+            if sucesso:
+                st.success(mensagem)
+            else:
+                st.error(mensagem)
 
         # Botão Atualizar Cotações
         def inicializar_precos():
