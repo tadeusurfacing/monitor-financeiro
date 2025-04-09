@@ -1,39 +1,37 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-import pandas as pd
+import streamlit as st
 
 def exportar_pdf(df):
-    """
-    Função para exportar o DataFrame para um arquivo PDF.
-    df: O DataFrame com os dados.
-    Retorna: Uma tupla (sucesso, mensagem), onde sucesso é um booleano e mensagem é uma string.
-    """
     try:
-        # Nome do arquivo PDF
-        output_file = "relatorio_investimentos.pdf"
+        df_exportar = df.copy()
+        df_exportar = df_exportar[["Papel", "Empresa", "Preço Médio", "Preço Atual",
+                                   "Quantidade", "Total Investido", "Valor Atual",
+                                   "Dividendos", "Dividendos/Ação", "Rentabilidade"]]
 
-        # Criar o PDF
-        c = canvas.Canvas(output_file, pagesize=A4)
-        c.setFont("Helvetica", 12)
+        pdf_path = "relatorio_acoes.pdf"
+        c = canvas.Canvas(pdf_path, pagesize=A4)
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, 800, "Relatório de Ações")
 
-        # Título
-        c.drawString(100, 800, "Relatório de Investimentos")
+        c.setFont("Helvetica-Bold", 10)
+        headers = df_exportar.columns
+        for i, header in enumerate(headers):
+            c.drawString(50 + i * 100, 770, header)
 
-        # Adicionar os dados do DataFrame
-        y = 750  # Posição inicial no eixo Y
-        for index, row in df.iterrows():
-            if y < 50:  # Se não houver mais espaço na página, criar uma nova
-                c.showPage()
-                c.setFont("Helvetica", 12)
-                y = 800
-            text = f"{row['Papel']}: R$ {row['Valor Atual']:.2f} (Rentabilidade: {row['Rentabilidade']})"
-            c.drawString(100, y, text)
+        c.setFont("Helvetica", 8)
+        y = 750
+        for _, row in df_exportar.iterrows():
+            for i, val in enumerate(row):
+                c.drawString(50 + i * 100, y, str(val))
             y -= 20
+            if y < 50:
+                c.showPage()
+                y = 800
 
-        # Finalizar o PDF
         c.save()
-
-        return True, f"PDF exportado com sucesso: {output_file}"
-
+        st.success(f"📄 PDF exportado com sucesso: `{pdf_path}`")
+        with open(pdf_path, "rb") as file:
+            st.download_button("📥 Baixar PDF", file.read(), file_name=pdf_path)
     except Exception as e:
-        return False, f"Erro ao exportar PDF: {str(e)}"
+        st.error(f"❌ Falha ao exportar PDF: {str(e)}")
